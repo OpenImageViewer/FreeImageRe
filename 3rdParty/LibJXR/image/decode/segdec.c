@@ -52,7 +52,9 @@ static Int DecodeSignificantAbsLevel (struct CAdaptiveHuffman *pAHexpt, BitIOInf
 //================================================================
 // Memory access functions
 //================================================================
+#if !((defined(WIN32) && !defined(UNDER_CE) && (!defined(__MINGW32__) || defined(__MINGW64_TOOLCHAIN__))) || (defined(UNDER_CE) && defined(_ARM_)))
 U32 _byteswap_ulong(U32);
+#endif
 
 static U32 _FORCEINLINE _load4(void* pv)
 {
