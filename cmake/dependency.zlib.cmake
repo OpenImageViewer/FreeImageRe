@@ -16,12 +16,6 @@ else()
     set(ZLIB_LIBRARY_NAME ${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX})
 endif()
 
-if(WIN32 AND IS_DEBUG_CONFIG)
-    set(ZLIB_LIBRARY_NAME_ACTIVE ${ZLIB_LIBRARY_NAME_DEBUG})
-else()
-    set(ZLIB_LIBRARY_NAME_ACTIVE ${ZLIB_LIBRARY_NAME})
-endif()
-
 ExternalProject_Add(ZLIB
     PREFIX "${EXTERNALPROJECT_BINARY_ROOT}/zlib"
     URL "https://github.com/madler/zlib/archive/refs/tags/v1.3.2.zip"
@@ -43,10 +37,7 @@ ExternalProject_Add(ZLIB
 # For configuring other dependencies
 ExternalProject_Get_Property(ZLIB INSTALL_DIR)
 set(ZLIB_ROOT ${INSTALL_DIR})
-set(ZLIB_LIBRARY ${ZLIB_ROOT}/lib/${ZLIB_LIBRARY_NAME_ACTIVE})
-if(WIN32)
-    set(ZLIB_LIBRARY_DEBUG ${ZLIB_ROOT}/lib/${ZLIB_LIBRARY_NAME_DEBUG})
-endif()
+set(ZLIB_LIBRARY ${ZLIB_ROOT}/lib/${ZLIB_LIBRARY_NAME})
 unset(INSTALL_DIR)
 
 add_library(LibZLIB INTERFACE)

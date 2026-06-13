@@ -80,15 +80,9 @@ endif()
 if (IS_MULTI_CONFIG)
     set(CMAKE_BUILD_TYPE_ARG "")
     set(BUILD_COMMAND_FOR_TARGET ${CMAKE_COMMAND} --build . --config $<CONFIG>)
-    if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug")
-        set(IS_DEBUG_CONFIG ON)
-    endif()
 else()
     set(CMAKE_BUILD_TYPE_ARG "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
     set(BUILD_COMMAND_FOR_TARGET ${CMAKE_COMMAND} --build . )
-    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(IS_DEBUG_CONFIG ON)
-    endif()
 endif()
 
 
@@ -120,25 +114,15 @@ else()
 endif()
 
 macro(link_library_path2 TARGET_ PREFIX_ LIBRARY_ LIBRARY_DEBUG_)
-    if (IS_MULTI_CONFIG)
-        target_link_libraries(${TARGET_} INTERFACE
-            optimized "${PREFIX_}/${LIBRARY_}"
-            debug "${PREFIX_}/${LIBRARY_DEBUG_}"
-        )
-    else ()
-        target_link_libraries(${TARGET_} INTERFACE "${PREFIX_}/${LIBRARY_}")
-    endif()
+    target_link_libraries(${TARGET_} INTERFACE
+        "${PREFIX_}/$<IF:$<AND:$<BOOL:${IS_MULTI_CONFIG}>,$<CONFIG:Debug>>,${LIBRARY_DEBUG_},${LIBRARY_}>"
+    )
 endmacro()
 
 macro(link_config_aware_library_path2 TARGET_ PREFIX_ LIBRARY_ LIBRARY_DEBUG_)
-    if (IS_MULTI_CONFIG)
-        target_link_libraries(${TARGET_} INTERFACE
-            optimized "${PREFIX_}/Release/${LIBRARY_}"
-            debug "${PREFIX_}/Debug/${LIBRARY_DEBUG_}"
-        )
-    else ()
-        target_link_libraries(${TARGET_} INTERFACE "${PREFIX_}/${LIBRARY_}")
-    endif()
+    target_link_libraries(${TARGET_} INTERFACE
+        "$<IF:$<BOOL:${IS_MULTI_CONFIG}>,${PREFIX_}/$<IF:$<CONFIG:Debug>,Debug/${LIBRARY_DEBUG_},Release/${LIBRARY_}>,${PREFIX_}/${LIBRARY_}>"
+    )
 endmacro()
 
 macro(link_config_aware_library_path TARGET_ PREFIX_ LIBRARY_)
