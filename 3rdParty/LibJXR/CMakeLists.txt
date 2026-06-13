@@ -28,11 +28,18 @@ set(jxr_sources
 add_library(LibJXR STATIC ${jxr_sources})
 
 target_compile_definitions(LibJXR PUBLIC -DDISABLE_PERF_MEASUREMENT)
+if (MINGW AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+    target_compile_definitions(LibJXR PRIVATE __MINGW64_TOOLCHAIN__=1)
+endif()
 
 target_include_directories(LibJXR PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(LibJXR PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/jxrgluelib)
 target_include_directories(LibJXR PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/image/sys)
-target_include_directories(LibJXR PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/common/include)
+if (WIN32)
+    target_include_directories(LibJXR PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/common/include)
+else()
+    target_include_directories(LibJXR PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/common/include)
+endif()
 target_include_directories(LibJXR PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/image)
 target_include_directories(LibJXR PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/image/decode)
 target_include_directories(LibJXR PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/image/encode)
@@ -42,7 +49,7 @@ set_property(TARGET LibJXR PROPERTY FOLDER "Dependencies")
 
 if (MSVC)
     target_compile_options(LibJXR PRIVATE "/w")
-else() # UNIX like
+elseif (NOT WIN32) # UNIX like
     target_compile_options(LibJXR PRIVATE "-D__ANSI__=1")
 endif()
 

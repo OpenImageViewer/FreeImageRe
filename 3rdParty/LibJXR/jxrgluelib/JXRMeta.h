@@ -29,7 +29,7 @@
 
 #include <windowsmediaphoto.h>
 #if !defined(WIN32) || defined(__MINGW32__)
-#include <wmspecstring.h>
+#include <common/include/wmspecstring.h>
 #endif
 
 #ifndef UNREFERENCED_PARAMETER

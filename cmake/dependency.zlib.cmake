@@ -9,6 +9,18 @@ set(_ZLIB_DEP_INCLUDE_GUARD_ ON)
 
 include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 
+if(WIN32)
+    set(ZLIB_LIBRARY_NAME ${CMAKE_STATIC_LIBRARY_PREFIX}zs${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(ZLIB_LIBRARY_NAME_DEBUG ${CMAKE_STATIC_LIBRARY_PREFIX}zsd${CMAKE_STATIC_LIBRARY_SUFFIX})
+else()
+    set(ZLIB_LIBRARY_NAME ${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX})
+endif()
+
+if(WIN32 AND IS_DEBUG_CONFIG)
+    set(ZLIB_LIBRARY_NAME_ACTIVE ${ZLIB_LIBRARY_NAME_DEBUG})
+else()
+    set(ZLIB_LIBRARY_NAME_ACTIVE ${ZLIB_LIBRARY_NAME})
+endif()
 
 ExternalProject_Add(ZLIB
     PREFIX "${EXTERNALPROJECT_BINARY_ROOT}/zlib"
@@ -21,7 +33,8 @@ ExternalProject_Add(ZLIB
     INSTALL_DIR "${EXTERNALPROJECT_BINARY_ROOT}/zlib/install"
     UPDATE_COMMAND ""
     INSTALL_COMMAND ${BUILD_COMMAND_FOR_TARGET} -t install
-            COMMAND ${CMAKE_COMMAND} -E copy "${EXTERNALPROJECT_SOURCE_PREFIX}/zlib/source/zutil.h" -t "${EXTERNALPROJECT_BINARY_ROOT}/zlib/install/include"
+            COMMAND ${CMAKE_COMMAND} -E copy "${EXTERNALPROJECT_SOURCE_PREFIX}/zlib/source/zutil.h" "${EXTERNALPROJECT_BINARY_ROOT}/zlib/install/include"
+    INSTALL_BYPRODUCTS "<INSTALL_DIR>/lib/${ZLIB_LIBRARY_NAME_ACTIVE}"
     CMAKE_ARGS ${CMAKE_TOOLCHAIN_FILE_ARG} ${CMAKE_BUILD_TYPE_ARG} "-DCMAKE_INSTALL_PREFIX:PATH=${EXTERNALPROJECT_BINARY_ROOT}/zlib/install"
         "-DZLIB_BUILD_TESTING=OFF" "-DZLIB_BUILD_SHARED=OFF" "-DZLIB_BUILD_STATIC=ON"
         "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} ${FPIC_FLAG}"
@@ -30,19 +43,22 @@ ExternalProject_Add(ZLIB
 # For configuring other dependencies
 ExternalProject_Get_Property(ZLIB INSTALL_DIR)
 set(ZLIB_ROOT ${INSTALL_DIR})
+set(ZLIB_LIBRARY ${ZLIB_ROOT}/lib/${ZLIB_LIBRARY_NAME_ACTIVE})
+if(WIN32)
+    set(ZLIB_LIBRARY_DEBUG ${ZLIB_ROOT}/lib/${ZLIB_LIBRARY_NAME_DEBUG})
+endif()
 unset(INSTALL_DIR)
 
 add_library(LibZLIB INTERFACE)
 add_dependencies(LibZLIB ZLIB)
 target_include_directories(LibZLIB INTERFACE ${ZLIB_ROOT}/include)
-if(WIN32)
-    if (IS_DEBUG_CONFIG)
-        target_link_libraries(LibZLIB INTERFACE ${ZLIB_ROOT}/lib/zsd${CMAKE_STATIC_LIBRARY_SUFFIX})
-    else()
-        target_link_libraries(LibZLIB INTERFACE ${ZLIB_ROOT}/lib/zs${CMAKE_STATIC_LIBRARY_SUFFIX})
-    endif()
+if(WIN32 AND IS_MULTI_CONFIG)
+    target_link_libraries(LibZLIB INTERFACE
+        optimized ${ZLIB_LIBRARY}
+        debug ${ZLIB_LIBRARY_DEBUG}
+    )
 else()
-    target_link_libraries(LibZLIB INTERFACE ${ZLIB_ROOT}/lib/libz${CMAKE_STATIC_LIBRARY_SUFFIX})
+    target_link_libraries(LibZLIB INTERFACE ${ZLIB_LIBRARY})
 endif()
 set_property(TARGET ZLIB PROPERTY FOLDER "Dependencies")
 

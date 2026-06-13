@@ -41,6 +41,11 @@ target_include_directories(LibRAW
 
 target_compile_definitions(LibRAW PUBLIC "-DLIBRAW_NODLL")
 
+if (MINGW)
+    set_target_properties(LibRAW PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
+    target_link_libraries(LibRAW PUBLIC ws2_32)
+endif()
+
 if (MSVC)
     target_compile_options(LibRAW PRIVATE "/w")
 else()
